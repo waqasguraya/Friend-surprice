@@ -1,0 +1,52 @@
+@import "tailwindcss";
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: #050816;
+  color: white;
+  font-family: var(--font-poppins);
+}
+
+.title {
+  font-family: var(--font-cinzel);
+}
+/* ===========================
+   Stars
+=========================== */
+
+.star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s infinite ease-in-out;
+  box-shadow: 0 0 8px white;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: .2;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.8);
+  }
+}
+.star-1 { top: 5%; left: 10%; animation-delay: .2s; }
+.star-2 { top: 15%; left: 25%; animation-delay: .8s; }
+.star-3 { top: 8%; left: 40%; animation-delay: 1.2s; }
+.star-4 { top: 22%; left: 55%; animation-delay: .5s; }
+.star-5 { top: 12%; left: 70%; animation-delay: 2s; }
+.star-6 { top: 30%; left: 85%; animation-delay: 1s; }
+.star-7 { top: 18%; left: 90%; animation-delay: 1.8s; }
+.star-8 { top: 40%; left: 20%; animation-delay: .4s; }
+.star-9 { top: 28%; left: 45%; animation-delay: 2.5s; }
+.star-10 { top: 35%; left: 65%; animation-delay: 1.4s; }
