@@ -5,12 +5,36 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "canvas-confetti";
-import { X, Play, RotateCcw, Heart, Sparkles, Film } from "lucide-react";
+import { X, Play, RotateCcw, Heart, Sparkles, Film, ZoomIn } from "lucide-react";
 
 // ─── CONFIG ───────────────────────────────────
 const IMAGES = [15, 16, 17];
 const VIDEO_SRC = "/video.mp4";
 const getImageSrc = (id) => `/images/${id}.jpeg`;
+
+// Custom messages displayed on hover and inside the lightbox
+const OVERLAY_MESSAGES = {
+  15: "Ending this journey, but keeping these moments forever. ✨",
+  16: "The best chapters are written with the best people. 💛",
+  17: "One last memory before the curtain falls. 🥂",
+};
+
+const FLOWER_SVGS = [
+  "/flower1.svg",
+  "/flower2.svg",
+  "/flower3.svg",
+  "/flower4.svg",
+  "/flower5.svg",
+];
+
+// CSS Filter classes to colorize monochrome SVGs into vibrant hues
+const FLOWER_COLORS = [
+  "invert-[.75] sepia-[1] saturate-[50] hue-rotate-[0deg]",    // Bright Yellow
+  "invert-[.5] sepia-[1] saturate-[50] hue-rotate-[315deg]",  // Vivid Red
+  "invert-[.6] sepia-[1] saturate-[40] hue-rotate-[290deg]",  // Warm Pink
+  "invert-[.5] sepia-[1] saturate-[40] hue-rotate-[230deg]",  // Neon Purple
+  "invert-[.7] sepia-[1] saturate-[40] hue-rotate-[140deg]",  // Bright Cyan
+];
 // ──────────────────────────────────────────────
 
 export default function Finale() {
@@ -35,10 +59,8 @@ export default function Finale() {
           await videoRef.current.play();
         } catch (err) {
           console.log("Autoplay blocked or failed:", err);
-          // If autoplay is blocked, user can click the native controls
         }
       };
-      // Small delay to ensure DOM is ready
       const timer = setTimeout(playVideo, 100);
       return () => clearTimeout(timer);
     }
@@ -60,7 +82,6 @@ export default function Finale() {
   const handleEnded = () => {
     setShowMessage(true);
 
-    // Multi-burst cinematic confetti
     const duration = 3000;
     const end = Date.now() + duration;
 
@@ -86,7 +107,6 @@ export default function Finale() {
     };
     frame();
 
-    // Big center burst
     setTimeout(() => {
       Confetti({
         particleCount: 150,
@@ -103,20 +123,23 @@ export default function Finale() {
     router.push("/");
   };
 
-  // Ambient particles
-  const [particles, setParticles] = useState([]);
+  // ─── Ambient Flowers State ────────────────────
+  const [flowers, setFlowers] = useState([]);
 
   useEffect(() => {
-    const generatedParticles = Array.from({ length: 20 }, (_, i) => ({
+    const generatedFlowers = Array.from({ length: 70 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      duration: Math.random() * 5 + 4,
-      delay: Math.random() * 3,
+      svgPath: FLOWER_SVGS[i % FLOWER_SVGS.length],
+      colorClass: FLOWER_COLORS[i % FLOWER_COLORS.length],
+      x: Math.random() * 95 + 2.5,
+      y: Math.random() * 90 + 5,
+      size: Math.floor(Math.random() * 10) + 12, // 12px to 22px
+      rotate: Math.random() * 360,
+      duration: Math.random() * 6 + 6,
+      delay: Math.random() * 4,
     }));
 
-    setParticles(generatedParticles);
+    setFlowers(generatedFlowers);
   }, []);
 
   const containerVariants = {
@@ -139,7 +162,7 @@ export default function Finale() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#02040a] text-white">
       {/* ═══ Background ═══ */}
-      <div className="pointer-events-none absolute inset-0">
+      <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-b from-[#02040a] via-[#0a0e27] to-[#0a0612]" />
         <motion.div
           animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.15, 1] }}
@@ -155,35 +178,50 @@ export default function Finale() {
 
       {/* Noise */}
       <div
-        className="pointer-events-none absolute inset-0 opacity-[0.03]"
+        className="pointer-events-none absolute inset-0 opacity-[0.03] z-0"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
         }}
       />
 
-      {/* Particles */}
-      {mounted &&
-  particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="pointer-events-none absolute rounded-full bg-amber-200/15"
-          style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            filter: "blur(1px)",
-          }}
-            
-          animate={{ y: [0, -30, 0], opacity: [0.1, 0.5, 0.1] }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+      {/* ═══ Tiny Floating Colorful Flowers ═══ */}
+      <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
+        {mounted &&
+          flowers.map((flower) => (
+            <motion.div
+              key={`flower-${flower.id}`}
+              className="absolute flex items-center justify-center filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+              style={{
+                top: `${flower.y}%`,
+                left: `${flower.x}%`,
+                width: `${flower.size}px`,
+                height: `${flower.size}px`,
+              }}
+              animate={{
+                y: [0, -25, 0],
+                x: [0, 8, 0],
+                rotate: [flower.rotate, flower.rotate + 180, flower.rotate + 360],
+                opacity: [0.5, 0.9, 0.5],
+              }}
+              transition={{
+                duration: flower.duration,
+                repeat: Infinity,
+                delay: flower.delay,
+                ease: "easeInOut",
+              }}
+            >
+              <Image
+                src={flower.svgPath}
+                alt="Flower"
+                width={flower.size}
+                height={flower.size}
+                style={{ width: `${flower.size}px`, height: `${flower.size}px` }}
+                className={`object-contain ${flower.colorClass}`}
+                unoptimized
+              />
+            </motion.div>
+          ))}
+      </div>
 
       {/* ═══ GALLERY VIEW ═══ */}
       <AnimatePresence mode="wait">
@@ -194,7 +232,7 @@ export default function Finale() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6 }}
-            className="relative z-10 mx-auto max-w-6xl px-4 py-16 md:py-24"
+            className="relative z-20 mx-auto max-w-6xl px-4 py-16 md:py-24"
           >
             {/* Header */}
             <motion.div
@@ -248,7 +286,7 @@ export default function Finale() {
               animate="show"
               className="grid grid-cols-1 gap-5 sm:grid-cols-3 md:gap-6"
             >
-              {IMAGES.map((img, index) => (
+              {IMAGES.map((img) => (
                 <motion.div
                   key={img}
                   variants={itemVariants}
@@ -265,16 +303,23 @@ export default function Finale() {
                     className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 group-hover:opacity-100">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md ring-1 ring-white/20">
-                      <Sparkles className="h-6 w-6 text-white" />
+                  {/* Hover Message */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center opacity-0 transition-all duration-500 group-hover:opacity-100">
+                    <p className="translate-y-4 text-base font-medium text-amber-100 tracking-wide transition-transform duration-500 group-hover:translate-y-0 md:text-lg">
+                      {OVERLAY_MESSAGES[img] || `Memory #${img}`}
+                    </p>
+                    <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-300/80">
+                      <ZoomIn className="h-3.5 w-3.5" />
+                      <span>Click to expand</span>
                     </div>
                   </div>
 
+                  {/* Bottom Label */}
                   <div className="absolute bottom-0 left-0 right-0 translate-y-full p-5 transition-transform duration-500 group-hover:translate-y-0">
-                    <p className="text-sm font-medium text-white/90">
+                    <p className="text-xs uppercase tracking-widest text-amber-400/80">
                       Memory #{img}
                     </p>
                     <div className="mt-1 h-px w-10 bg-amber-400/60" />
@@ -314,7 +359,7 @@ export default function Finale() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.6 }}
-            className="relative z-10 flex min-h-screen items-center justify-center px-4 py-12"
+            className="relative z-20 flex min-h-screen items-center justify-center px-4 py-12"
           >
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
@@ -322,7 +367,6 @@ export default function Finale() {
               transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl backdrop-blur-xl"
             >
-              {/* Video glow */}
               <div className="absolute -inset-4 -z-10 rounded-3xl bg-amber-500/10 blur-2xl" />
 
               <video
@@ -360,7 +404,7 @@ export default function Finale() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 1 }}
-            className="relative z-10 flex min-h-screen items-center justify-center px-4 py-12"
+            className="relative z-20 flex min-h-screen items-center justify-center px-4 py-12"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 30 }}
@@ -368,7 +412,6 @@ export default function Finale() {
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
               className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-10 shadow-2xl backdrop-blur-xl md:p-16"
             >
-              {/* Inner glow */}
               <div className="absolute -top-24 -left-24 h-48 w-48 rounded-full bg-amber-400/10 blur-[80px]" />
               <div className="absolute -bottom-24 -right-24 h-48 w-48 rounded-full bg-pink-500/10 blur-[80px]" />
 
@@ -478,6 +521,14 @@ export default function Finale() {
                 height={800}
                 className="max-h-[85vh] max-w-[90vw] object-contain"
               />
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-6 text-center">
+                <p className="text-lg font-medium text-amber-100">
+                  {OVERLAY_MESSAGES[selected] || `Memory #${selected}`}
+                </p>
+                <p className="mt-1 text-xs text-white/50 uppercase tracking-widest">
+                  Memory #{selected}
+                </p>
+              </div>
             </motion.div>
           </motion.div>
         )}

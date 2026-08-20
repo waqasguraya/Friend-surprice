@@ -3,22 +3,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   X,
   ChevronLeft,
   ChevronRight,
   ArrowRight,
   Heart,
-  Flower2,
   ZoomIn,
 } from "lucide-react";
 
 // ─── CONFIG ───────────────────────────────────
 const TITLE = "Beautiful Moments";
-const SUBTITLE = "Some smiles never fade...";
+const SUBTITLE = "Some smiles light up the world from miles away...";
 const NEXT_ROUTE = "/room3";
 const IMAGE_IDS = [5, 6, 7, 8];
 const getImageSrc = (id) => `/images/${id}.jpeg`;
+
+const FLOWER_SVGS = [
+  "/flower1.svg",
+  "/flower2.svg",
+  "/flower3.svg",
+  "/flower4.svg",
+  "/flower5.svg",
+];
+
+// Tailwind classes to recolor black/white SVGs into vivid vibrant hues
+const FLOWER_COLORS = [
+  "invert-[.75] sepia-[1] saturate-[50] hue-rotate-[0deg]",    // Bright Yellow
+  "invert-[.5] sepia-[1] saturate-[50] hue-rotate-[315deg]",  // Vivid Red
+  "invert-[.6] sepia-[1] saturate-[40] hue-rotate-[290deg]",  // Warm Pink
+  "invert-[.5] sepia-[1] saturate-[40] hue-rotate-[230deg]",  // Neon Purple
+  "invert-[.7] sepia-[1] saturate-[40] hue-rotate-[140deg]",  // Bright Cyan
+];
+
+const OVERLAY_MESSAGES = {
+  5: "Proof that true beauty shines bright even across any distance. ✨",
+  6: "Your smile is genuinely my absolute favorite notification. 💖",
+  7: "Even through a screen, your kindness and grace radiate so effortlessly. 🌸",
+  8: "We haven't met in person yet, but you're already one of my favorite people. 🌷",
+};
 // ──────────────────────────────────────────────
 
 export default function Room2() {
@@ -44,19 +68,22 @@ export default function Room2() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [selectedIndex, showNext, showPrev]);
 
-  const [particles, setParticles] = useState([]);
+  const [flowers, setFlowers] = useState([]);
 
   useEffect(() => {
-    const generatedParticles = Array.from({ length: 16 }, (_, i) => ({
+    // Generate 70 tiny colorful flowers distributed across the entire screen
+    const generatedFlowers = Array.from({ length: 70 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      duration: Math.random() * 5 + 4,
-      delay: Math.random() * 3,
+      svgPath: FLOWER_SVGS[i % FLOWER_SVGS.length],
+      colorClass: FLOWER_COLORS[i % FLOWER_COLORS.length],
+      x: Math.random() * 95 + 2.5,     // 2.5% to 97.5% across the screen
+      y: Math.random() * 90 + 5,       // 5% to 95% down the screen
+      size: Math.floor(Math.random() * 10) + 12, // Tiny size: 12px to 22px
+      rotate: Math.random() * 360,
+      duration: Math.random() * 6 + 6,
+      delay: Math.random() * 4,
     }));
-
-    setParticles(generatedParticles);
+    setFlowers(generatedFlowers);
   }, []);
 
   const containerVariants = {
@@ -76,7 +103,6 @@ export default function Room2() {
     },
   };
 
-  // Bento grid sizing per index
   const getGridClass = (index) => {
     if (index === 0) return "md:col-span-2 md:row-span-2 aspect-square md:aspect-auto";
     if (index === 3) return "md:col-span-2 aspect-[21/9] md:aspect-[21/9]";
@@ -85,49 +111,61 @@ export default function Room2() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#02040a] text-white">
-      {/* ═══ Background ═══ */}
-      <div className="pointer-events-none absolute inset-0">
+      {/* ═══ Background Gradients ═══ */}
+      <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-[#02040a] via-[#0f0a1a] to-[#1a0f1f]" />
         <motion.div
           animate={{ opacity: [0.2, 0.35, 0.2], scale: [1, 1.15, 1] }}
           transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -top-32 right-1/4 h-[600px] w-[600px] rounded-full bg-pink-900/10 blur-[120px]"
+          className="absolute -top-32 right-1/4 h-[600px] w-[600px] rounded-full bg-pink-900/20 blur-[120px]"
         />
         <motion.div
           animate={{ opacity: [0.15, 0.3, 0.15], scale: [1.1, 1, 1.1] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute -bottom-32 left-1/4 h-[500px] w-[500px] rounded-full bg-rose-900/10 blur-[100px]"
+          className="absolute -bottom-32 left-1/4 h-[500px] w-[500px] rounded-full bg-rose-900/20 blur-[100px]"
         />
       </div>
 
-      {/* Floating Petals/Particles */}
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="pointer-events-none absolute rounded-full bg-pink-200/15"
-          style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            filter: "blur(1px)",
-          }}
-          animate={{
-            y: [0, -50, 0],
-            x: [0, 10, -10, 0],
-            opacity: [0.1, 0.4, 0.1],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+      {/* ═══ Tiny Floating Colorful Flowers ═══ */}
+      <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
+        {flowers.map((flower) => (
+          <motion.div
+            key={`flower-${flower.id}`}
+            className="absolute flex items-center justify-center filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+            style={{
+              top: `${flower.y}%`,
+              left: `${flower.x}%`,
+              width: `${flower.size}px`,
+              height: `${flower.size}px`,
+            }}
+            animate={{
+              y: [0, -25, 0],
+              x: [0, 8, 0],
+              rotate: [flower.rotate, flower.rotate + 180, flower.rotate + 360],
+              opacity: [0.5, 0.9, 0.5],
+            }}
+            transition={{
+              duration: flower.duration,
+              repeat: Infinity,
+              delay: flower.delay,
+              ease: "easeInOut",
+            }}
+          >
+            <Image
+              src={flower.svgPath}
+              alt="Flower"
+              width={flower.size}
+              height={flower.size}
+              style={{ width: `${flower.size}px`, height: `${flower.size}px` }}
+              className={`object-contain ${flower.colorClass}`}
+              unoptimized
+            />
+          </motion.div>
+        ))}
+      </div>
 
-      {/* ═══ Content ═══ */}
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-16 md:py-24">
+      {/* ═══ Main Content ═══ */}
+      <div className="relative z-20 mx-auto max-w-6xl px-4 py-16 md:py-24">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -141,7 +179,14 @@ export default function Room2() {
             transition={{ delay: 0.2 }}
             className="mb-6 inline-flex items-center gap-2 rounded-full border border-pink-500/20 bg-pink-500/10 px-4 py-1.5 backdrop-blur-md"
           >
-            <Flower2 className="h-4 w-4 text-pink-300" />
+            <Image
+              src="/flower1.svg"
+              alt="Flower"
+              width={14}
+              height={14}
+              className="h-3.5 w-3.5 invert-[.75] sepia-[1] saturate-[50] hue-rotate-[0deg]"
+              unoptimized
+            />
             <span className="text-xs font-medium uppercase tracking-[0.25em] text-pink-200">
               Collection
             </span>
@@ -194,9 +239,9 @@ export default function Room2() {
                 alt={`Moment ${id}`}
                 loading="lazy"
                 onLoad={() => setLoaded((prev) => ({ ...prev, [id]: true }))}
-                className={`h-full w-full object-cover transition-all duration-700 group-hover:scale-110 ${
-                  loaded[id] ? "opacity-100" : "opacity-0"
-                }`}
+                className={`h-full w-full object-cover transition-all duration-700 ${
+                  loaded[id] ? "opacity-80 group-hover:opacity-100" : "opacity-0"
+                } group-hover:scale-110`}
               />
 
               {!loaded[id] && (
@@ -204,19 +249,23 @@ export default function Room2() {
               )}
 
               {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-              {/* Center Icon */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 group-hover:opacity-100">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md ring-1 ring-white/20">
-                  <ZoomIn className="h-6 w-6 text-white" />
+              {/* Hover Text Message */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center opacity-0 transition-all duration-500 group-hover:opacity-100">
+                <p className="translate-y-4 text-base font-medium text-pink-100 tracking-wide transition-transform duration-500 group-hover:translate-y-0 md:text-lg">
+                  {OVERLAY_MESSAGES[id] || `Moment #${id}`}
+                </p>
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-white/60">
+                  <ZoomIn className="h-3.5 w-3.5 text-pink-300" />
+                  <span>Click to expand</span>
                 </div>
               </div>
 
               {/* Bottom Label */}
               <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between p-5 translate-y-2 opacity-0 transition-all duration-500 group-hover:translate-y-0 group-hover:opacity-100">
                 <div>
-                  <p className="text-sm font-medium text-white/90">Moment #{id}</p>
+                  <p className="text-xs uppercase tracking-widest text-pink-300/80">Moment #{id}</p>
                   <div className="mt-1 h-px w-10 bg-pink-400/60" />
                 </div>
                 <Heart className="h-4 w-4 text-pink-300/70" />
@@ -247,7 +296,7 @@ export default function Room2() {
         </motion.div>
       </div>
 
-      {/* ═══ Lightbox ═══ */}
+      {/* ═══ Lightbox Modal ═══ */}
       <AnimatePresence>
         {selectedIndex !== null && (
           <motion.div
@@ -301,7 +350,7 @@ export default function Room2() {
               />
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
                 <p className="text-center text-lg font-medium text-white/90">
-                  Moment #{IMAGE_IDS[selectedIndex]}
+                  {OVERLAY_MESSAGES[IMAGE_IDS[selectedIndex]] || `Moment #${IMAGE_IDS[selectedIndex]}`}
                 </p>
                 <p className="mt-1 text-center text-sm text-white/50">
                   {selectedIndex + 1} / {IMAGE_IDS.length}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   X,
   ChevronLeft,
@@ -19,6 +20,30 @@ const SUBTITLE = "These moments deserve forever.";
 const NEXT_ROUTE = "/finale";
 const IMAGE_IDS = [9, 10, 11];
 const getImageSrc = (id) => `/images/${id}.jpeg`;
+
+// Custom messages displayed on hover and inside the lightbox
+const OVERLAY_MESSAGES = {
+  9: "A golden moment frozen in time... ✨",
+  10: "Laughter, happiness, and unforgettable times. 🌟",
+  11: "Here's to the memories we'll cherish forever. 💛",
+};
+
+const FLOWER_SVGS = [
+  "/flower1.svg",
+  "/flower2.svg",
+  "/flower3.svg",
+  "/flower4.svg",
+  "/flower5.svg",
+];
+
+// CSS Filter classes to colorize monochrome SVGs into vibrant hues
+const FLOWER_COLORS = [
+  "invert-[.75] sepia-[1] saturate-[50] hue-rotate-[0deg]",    // Bright Yellow
+  "invert-[.5] sepia-[1] saturate-[50] hue-rotate-[315deg]",  // Vivid Red
+  "invert-[.6] sepia-[1] saturate-[40] hue-rotate-[290deg]",  // Warm Pink
+  "invert-[.5] sepia-[1] saturate-[40] hue-rotate-[230deg]",  // Neon Purple
+  "invert-[.7] sepia-[1] saturate-[40] hue-rotate-[140deg]",  // Bright Cyan
+];
 // ──────────────────────────────────────────────
 
 export default function Room3() {
@@ -44,19 +69,23 @@ export default function Room3() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [selectedIndex, showNext, showPrev]);
 
-  const [particles, setParticles] = useState([]);
+  const [flowers, setFlowers] = useState([]);
 
   useEffect(() => {
-    const generatedParticles = Array.from({ length: 18 }, (_, i) => ({
+    // Generate 70 tiny vibrant flowers across the background
+    const generatedFlowers = Array.from({ length: 70 }, (_, i) => ({
       id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1,
-      duration: Math.random() * 5 + 4,
-      delay: Math.random() * 3,
+      svgPath: FLOWER_SVGS[i % FLOWER_SVGS.length],
+      colorClass: FLOWER_COLORS[i % FLOWER_COLORS.length],
+      x: Math.random() * 95 + 2.5,
+      y: Math.random() * 90 + 5,
+      size: Math.floor(Math.random() * 10) + 12, // 12px to 22px
+      rotate: Math.random() * 360,
+      duration: Math.random() * 6 + 6,
+      delay: Math.random() * 4,
     }));
 
-    setParticles(generatedParticles);
+    setFlowers(generatedFlowers);
   }, []);
 
   const containerVariants = {
@@ -79,7 +108,7 @@ export default function Room3() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#02040a] text-white">
       {/* ═══ Background ═══ */}
-      <div className="pointer-events-none absolute inset-0">
+      <div className="pointer-events-none absolute inset-0 z-0">
         <div className="absolute inset-0 bg-gradient-to-br from-[#02040a] via-[#0a0e1a] to-[#1a1505]" />
         <motion.div
           animate={{ opacity: [0.2, 0.4, 0.2], scale: [1, 1.1, 1] }}
@@ -93,33 +122,46 @@ export default function Room3() {
         />
       </div>
 
-      {/* Floating Gold Particles */}
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="pointer-events-none absolute rounded-full bg-amber-200/20"
-          style={{
-            left: `${p.x}%`,
-            top: `${p.y}%`,
-            width: p.size,
-            height: p.size,
-            filter: "blur(1px)",
-          }}
-          animate={{
-            y: [0, -40, 0],
-            opacity: [0.1, 0.5, 0.1],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            delay: p.delay,
-            ease: "easeInOut",
-          }}
-        />
-      ))}
+      {/* ═══ Tiny Floating Colorful Flowers ═══ */}
+      <div className="pointer-events-none fixed inset-0 z-10 overflow-hidden">
+        {flowers.map((flower) => (
+          <motion.div
+            key={`flower-${flower.id}`}
+            className="absolute flex items-center justify-center filter drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+            style={{
+              top: `${flower.y}%`,
+              left: `${flower.x}%`,
+              width: `${flower.size}px`,
+              height: `${flower.size}px`,
+            }}
+            animate={{
+              y: [0, -25, 0],
+              x: [0, 8, 0],
+              rotate: [flower.rotate, flower.rotate + 180, flower.rotate + 360],
+              opacity: [0.5, 0.9, 0.5],
+            }}
+            transition={{
+              duration: flower.duration,
+              repeat: Infinity,
+              delay: flower.delay,
+              ease: "easeInOut",
+            }}
+          >
+            <Image
+              src={flower.svgPath}
+              alt="Flower"
+              width={flower.size}
+              height={flower.size}
+              style={{ width: `${flower.size}px`, height: `${flower.size}px` }}
+              className={`object-contain ${flower.colorClass}`}
+              unoptimized
+            />
+          </motion.div>
+        ))}
+      </div>
 
       {/* ═══ Content ═══ */}
-      <div className="relative z-10 mx-auto max-w-5xl px-4 py-16 md:py-24">
+      <div className="relative z-20 mx-auto max-w-5xl px-4 py-16 md:py-24">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -199,13 +241,17 @@ export default function Room3() {
                 <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-white/5 to-white/[0.02]" />
               )}
 
-              {/* Hover Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+              {/* Hover Dark Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
-              {/* Center Icon */}
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-500 group-hover:opacity-100">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-white/10 backdrop-blur-md ring-1 ring-white/20">
-                  <ZoomIn className="h-6 w-6 text-white" />
+              {/* Hover Text Message */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center opacity-0 transition-all duration-500 group-hover:opacity-100">
+                <p className="translate-y-4 text-base font-medium text-amber-100 tracking-wide transition-transform duration-500 group-hover:translate-y-0 md:text-lg">
+                  {OVERLAY_MESSAGES[id] || `Memory #${id}`}
+                </p>
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-amber-300/80">
+                  <ZoomIn className="h-3.5 w-3.5" />
+                  <span>Click to expand</span>
                 </div>
               </div>
 
@@ -213,7 +259,7 @@ export default function Room3() {
               <div className="absolute bottom-0 left-0 right-0 translate-y-full p-6 transition-transform duration-500 group-hover:translate-y-0">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-white/90">Memory #{id}</p>
+                    <p className="text-xs uppercase tracking-widest text-amber-400/80">Memory #{id}</p>
                     <div className="mt-1 h-px w-12 bg-amber-400/60" />
                   </div>
                   <Sparkles className="h-4 w-4 text-amber-300/70" />
@@ -297,12 +343,12 @@ export default function Room3() {
                 alt={`Memory ${IMAGE_IDS[selectedIndex]}`}
                 className="max-h-[85vh] max-w-[90vw] object-contain"
               />
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                <p className="text-center text-lg font-medium text-white/90">
-                  Memory #{IMAGE_IDS[selectedIndex]}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-6 text-center">
+                <p className="text-lg font-medium text-amber-100">
+                  {OVERLAY_MESSAGES[IMAGE_IDS[selectedIndex]] || `Memory #${IMAGE_IDS[selectedIndex]}`}
                 </p>
-                <p className="mt-1 text-center text-sm text-white/50">
-                  {selectedIndex + 1} / {IMAGE_IDS.length}
+                <p className="mt-1 text-xs text-white/50 uppercase tracking-widest">
+                  Memory {selectedIndex + 1} of {IMAGE_IDS.length}
                 </p>
               </div>
             </motion.div>
